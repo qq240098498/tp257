@@ -400,11 +400,19 @@ function batchDetailRow(b) {
 
   const records = (d.records || []).map(function (r) {
     const oor = out[r.id];
-    return '<tr><td>' + esc(r.at) + '</td><td>' + esc(r.probeCode) + '</td><td class="num">' + num(r.temperatureC) + '</td>' +
+    const adopted = r.adopted !== false;
+    const rangeCell = !adopted
+      ? pill('不参与判定', 'pill-mute')
+      : (oor ? pill('超限', 'pill-bad') : pill('正常', 'pill-mute'));
+    const adoptCell = adopted
+      ? pill('采用', 'pill-ok')
+      : pill('未采用', 'pill-bad') + '<div class="cell-note">' + esc(r.adoptionNote || ('被 ' + (r.supersededBy || '') + ' 顶掉')) + '</div>';
+    return '<tr' + (adopted ? '' : ' class="row-superseded"') + '><td>' + esc(r.at) + '</td><td>' + esc(r.probeCode) + '</td><td class="num">' + num(r.temperatureC) + '</td>' +
       '<td>' + esc(r.source) + '</td>' +
-      '<td>' + (oor ? pill('超限', 'pill-bad') : pill('正常', 'pill-mute')) + '</td>' +
+      '<td>' + rangeCell + '</td>' +
+      '<td class="cell-wrap">' + adoptCell + '</td>' +
       '<td>' + (r.probeExpired ? pill('已过期', 'pill-bad') : pill('有效', 'pill-mute')) + '</td></tr>';
-  }).join('') || '<tr><td colspan="6" class="empty">没有温度记录</td></tr>';
+  }).join('') || '<tr><td colspan="7" class="empty">没有温度记录</td></tr>';
 
   let segmentsHtml;
   if (d.segmentsUnavailable) {
@@ -450,7 +458,8 @@ function batchDetailRow(b) {
   return '<tr class="row-detail"><td colspan="13">' +
     '<div class="detail-grid">' +
     '<div class="detail-block"><h4>温度记录（' + (d.records || []).length + '）</h4>' +
-    '<table class="mini-table"><thead><tr><th>时刻</th><th>探头</th><th class="num">温度(℃)</th><th>来源</th><th>是否超限</th><th>探头是否过期</th></tr></thead><tbody>' + records + '</tbody></table></div>' +
+    '<div class="detail-note">取数口径：同一探头同一时刻既有自动记录又有手工更正时以手工更正为准，同一来源多条时以登记在后的为准；未采用的记录不参与超限段、累计超限、断链、MKT 与放行判定。</div>' +
+    '<table class="mini-table"><thead><tr><th>时刻</th><th>探头</th><th class="num">温度(℃)</th><th>来源</th><th>是否超限</th><th>判定采用</th><th>探头是否过期</th></tr></thead><tbody>' + records + '</tbody></table></div>' +
     '<div class="detail-block"><h4>超限段（' + (d.segments || []).length + '）</h4>' + segmentsHtml +
     '<h4>断链缺口（' + (d.chainGaps || []).length + '）</h4>' +
     '<table class="mini-table"><thead><tr><th>起</th><th>止</th><th class="num">实际(分)</th><th class="num">计入(分)</th></tr></thead><tbody>' + gaps + '</tbody></table></div>' +
@@ -530,11 +539,15 @@ async function loadRecordsView() {
     : ('共 ' + rows.length + ' 条，已显示前 ' + Math.min(RECORD_PAGE, rows.length) + ' 条');
   const tbody = $('recordRows');
   if (!shown.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">没有符合条件的温度记录</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">没有符合条件的温度记录</td></tr>';
     return;
   }
   tbody.innerHTML = shown.map(function (r) {
-    return '<tr class="row-main" data-rowkind="record" data-id="' + esc(r.id) + '">' +
+    const adopted = r.adopted !== false;
+    const adoptCell = adopted
+      ? pill('采用', 'pill-ok')
+      : pill('未采用', 'pill-bad') + '<div class="cell-note">' + esc(r.adoptionNote || ('被 ' + (r.supersededBy || '') + ' 顶掉')) + '</div>';
+    return '<tr class="row-main' + (adopted ? '' : ' row-superseded') + '" data-rowkind="record" data-id="' + esc(r.id) + '">' +
       '<td>' + esc(r.batchCode) + '</td>' +
       '<td>' + esc(r.probeCode) + '</td>' +
       '<td>' + esc(r.at) + '</td>' +
@@ -542,6 +555,7 @@ async function loadRecordsView() {
       '<td>' + esc(r.source) + '</td>' +
       '<td>' + esc(r.operator) + '</td>' +
       '<td>' + (r.outOfRange ? pill('超限', 'pill-bad') : pill('正常', 'pill-mute')) + '</td>' +
+      '<td class="cell-wrap">' + adoptCell + '</td>' +
       '<td class="cell-actions"><button type="button" class="btn btn-sm btn-danger" data-action="record-del" data-id="' + esc(r.id) + '">删除</button></td>' +
       '</tr>';
   }).join('');

@@ -16,22 +16,58 @@ function probeOf(data, probeId) {
   return data.probes.find((p) => p.id === probeId) || null;
 }
 
-// 同一探头同一时刻既有自动记录又有手工更正时，以手工为准
-function effectiveRecords(data, batchId) {
+// 取数口径（README 口径第 7 条）：同一探头同一时刻可能有多条记录
+// （自动采集加手工更正），判定一律只取一条「有效记录」：
+//   1. 有手工更正（来源「人工」）时以人工为准，同刻自动记录不采用；
+//   2. 同一来源有多条时，以登记在后的（记录编号大的）为准。
+// 超限段、累计超限、断链、MKT、放行判定与页面明细全部从这里取数，
+// 被顶掉的记录不参与任何判定，但 adoption 里会写清它被哪条顶掉、为什么。
+function idSerial(id) {
+  const matched = String(id || '').match(/(\d+)$/);
+  return matched ? Number(matched[1]) : 0;
+}
+
+function recordAdoption(data, batchId) {
   const rows = recordsOfBatch(data, batchId);
-  const picked = {};
-  const order = [];
+  const groups = new Map();
   for (const row of rows) {
     const key = row.probeId + '|' + row.at;
-    if (picked[key] === undefined) {
-      picked[key] = row;
-      order.push(key);
-      continue;
-    }
-    const current = picked[key];
-    if (current.source === '人工' && row.source === '自动') picked[key] = row;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(row);
   }
-  return order.map((key) => picked[key]);
+  const effective = [];
+  const adoption = {};
+  for (const group of groups.values()) {
+    const manual = group.filter((r) => r.source === '人工');
+    const pool = manual.length ? manual : group;
+    let winner = pool[0];
+    for (const row of pool) {
+      if (idSerial(row.id) > idSerial(winner.id)) winner = row;
+    }
+    for (const row of group) {
+      if (row === winner) {
+        adoption[row.id] = { adopted: true, byId: '', reason: '' };
+      } else if (row.source !== winner.source) {
+        adoption[row.id] = {
+          adopted: false,
+          byId: winner.id,
+          reason: '同探头同时刻有手工更正记录 ' + winner.id + '（人工' + (winner.operator ? '，' + winner.operator : '') + '，' + winner.temperatureC + '℃），按口径以手工为准',
+        };
+      } else {
+        adoption[row.id] = {
+          adopted: false,
+          byId: winner.id,
+          reason: '同探头同时刻有多条' + row.source + '记录，以登记在后的 ' + winner.id + ' 为准',
+        };
+      }
+    }
+    effective.push(winner);
+  }
+  return { effective, adoption };
+}
+
+function effectiveRecords(data, batchId) {
+  return recordAdoption(data, batchId).effective;
 }
 
 // 超限：连续超出上下限的时段，回到范围内即断开
@@ -161,6 +197,7 @@ module.exports = {
   toDate,
   probeOf,
   recordsOfBatch,
+  recordAdoption,
   effectiveRecords,
   excursionStats,
   chainGaps,

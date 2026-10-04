@@ -213,6 +213,10 @@ button { font-family: inherit; font-size: 13px; }
 .row-danger td { background: var(--accent-soft); }
 .row-danger:hover td { background: #fbdcd8; }
 
+.row-superseded td { background: #faf6f3; }
+.cell-wrap { white-space: normal; min-width: 150px; max-width: 340px; }
+.cell-note { color: var(--ink-soft); font-size: 11px; margin-top: 2px; white-space: normal; }
+
 tr.row-detail > td { background: #f7fbfc; border-bottom: 1px solid var(--line); }
 .detail-note { color: var(--ink-soft); font-size: 12px; margin: 2px 0 8px; }
 .detail-grid { display: flex; flex-wrap: wrap; gap: 14px; }

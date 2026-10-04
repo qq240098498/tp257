@@ -21,6 +21,12 @@ function probeCode(data, id) {
   return probe ? probe.code : '';
 }
 
+// 把取数口径的采用结论贴到一条记录上：采用 / 未采用（被哪条顶掉、为什么）
+function adoptionFields(info) {
+  const a = info || { adopted: true, byId: '', reason: '' };
+  return { adopted: a.adopted, supersededBy: a.byId || '', adoptionNote: a.reason || '' };
+}
+
 function decorateRoom(data, room) {
   const probes = data.probes.filter((p) => p.roomId === room.id);
   const batches = data.batches.filter((b) => b.roomId === room.id);
@@ -202,13 +208,14 @@ function listBatches(data, query) {
 function batchDetail(data, id) {
   const batch = data.batches.find((b) => b.id === id);
   if (!batch) throw new AppError(404, 'BATCH_NOT_FOUND', '这个批次不存在');
+  const adoptionView = coldlib.recordAdoption(data, id);
   const rows = coldlib.recordsOfBatch(data, id).map((r) => Object.assign({}, r, {
     probeCode: probeCode(data, r.probeId),
     probeExpired: !coldlib.probeValidOn(coldlib.probeOf(data, r.probeId), String(r.at).slice(0, 10)),
-  }));
+  }, adoptionFields(adoptionView.adoption[r.id])));
   return Object.assign({}, decorateBatch(data, batch), {
     records: rows,
-    effectiveRecords: coldlib.effectiveRecords(data, id).map((r) => Object.assign({}, r, { probeCode: probeCode(data, r.probeId) })),
+    effectiveRecords: adoptionView.effective.map((r) => Object.assign({}, r, { probeCode: probeCode(data, r.probeId) })),
     segments: coldlib.excursionStats(data, id).segments,
     chainGaps: coldlib.chainGaps(data, id).gaps,
     releases: data.releases.filter((r) => r.batchId === id).slice().sort((a, b) => (a.decidedAt < b.decidedAt ? 1 : -1)),
@@ -283,12 +290,17 @@ function listRecords(data, query) {
   if (q.source) rows = rows.filter((r) => r.source === q.source);
   if (q.from) rows = rows.filter((r) => r.at >= q.from);
   if (q.to) rows = rows.filter((r) => r.at <= q.to);
+  const adoptionCache = {};
+  const adoptionOf = (batchId) => {
+    if (!adoptionCache[batchId]) adoptionCache[batchId] = coldlib.recordAdoption(data, batchId).adoption;
+    return adoptionCache[batchId];
+  };
   return rows
     .map((r) => Object.assign({}, r, {
       batchCode: batchCode(data, r.batchId),
       probeCode: probeCode(data, r.probeId),
       outOfRange: Number(r.temperatureC) > Number(data.settings.upperLimitC) || Number(r.temperatureC) < Number(data.settings.lowerLimitC),
-    }))
+    }, adoptionFields(adoptionOf(r.batchId)[r.id])))
     .sort((a, b) => (a.at < b.at ? 1 : -1));
 }
 
