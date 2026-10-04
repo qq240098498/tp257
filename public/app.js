@@ -399,12 +399,52 @@ function batchDetailRow(b) {
   const out = state.batchOut[b.id] || {};
 
   const records = (d.records || []).map(function (r) {
-    const oor = out[r.id];
-    return '<tr><td>' + esc(r.at) + '</td><td>' + esc(r.probeCode) + '</td><td class="num">' + num(r.temperatureC) + '</td>' +
-      '<td>' + esc(r.source) + '</td>' +
-      '<td>' + (oor ? pill('超限', 'pill-bad') : pill('正常', 'pill-mute')) + '</td>' +
-      '<td>' + (r.probeExpired ? pill('已过期', 'pill-bad') : pill('有效', 'pill-mute')) + '</td></tr>';
-  }).join('') || '<tr><td colspan="6" class="empty">没有温度记录</td></tr>';
+    const hasAdoption = r.adopted !== undefined && r.adopted !== null;
+    const notAdopted = hasAdoption && r.adopted === false;
+    const stopped = hasAdoption && r.adoptReason === 'stopped-probe';
+    const rowCls = notAdopted ? ' class="row-adopt-off"' : '';
+    const tempCls = notAdopted ? ' class="val-off"' : '';
+
+    // 是否超限一律按该时刻最终采用值判定；停用探头记录不参与判定
+    let oorPill;
+    if (!hasAdoption) {
+      oorPill = out[r.id] ? pill('超限', 'pill-bad') : pill('正常', 'pill-mute');
+    } else if (r.effectiveOutOfRange === null || stopped) {
+      oorPill = pill('不计入', 'pill-mute');
+    } else {
+      oorPill = r.effectiveOutOfRange ? pill('超限', 'pill-bad') : pill('正常', 'pill-mute');
+    }
+
+    // 采用情况：该时刻最终用的是哪一条、另一条为什么不采用
+    let adoptCell;
+    if (!hasAdoption) {
+      adoptCell = '<span class="detail-note">—</span>';
+    } else if (r.adopted) {
+      adoptCell = pill('采用', 'pill-ok') +
+        (r.adoptNote ? '<span class="cell-sub">' + esc(r.adoptNote) + '</span>' : '');
+    } else {
+      const replaced = (r.replacedByTemperatureC !== null && r.replacedByTemperatureC !== undefined)
+        ? '，改用 ' + num(r.replacedByTemperatureC) + '℃' + (r.replacedByOperator ? '（' + esc(r.replacedByOperator) + '）' : '')
+        : '';
+      adoptCell = pill('不采用', 'pill-bad') +
+        '<span class="cell-sub">' + esc(r.adoptNote) + esc(replaced) + '</span>';
+    }
+
+    return '<tr' + rowCls + '><td>' + esc(r.at) + '</td><td>' + esc(r.probeCode) + '</td>' +
+      '<td class="num"' + tempCls + '>' + num(r.temperatureC) + '</td>' +
+      '<td>' + esc(r.source) + '</td><td>' + esc(r.operator || '') + '</td>' +
+      '<td>' + oorPill + '</td>' +
+      '<td>' + (r.probeExpired ? pill('已过期', 'pill-bad') : pill('有效', 'pill-mute')) + '</td>' +
+      '<td class="cell-adopt">' + adoptCell + '</td></tr>';
+  }).join('') || '<tr><td colspan="8" class="empty">没有温度记录</td></tr>';
+
+  const adoption = d.adoptionStats;
+  const recordTitle = adoption
+    ? '温度记录（共 ' + num(adoption.total) + ' 条，采用 ' + num(adoption.adopted) + ' 条' +
+      (adoption.supersededByManual ? '，手工更正替代 ' + num(adoption.supersededByManual) + ' 条' : '') +
+      (adoption.duplicate ? '，重复未采用 ' + num(adoption.duplicate) + ' 条' : '') +
+      (adoption.stoppedProbe ? '，停用探头不计入 ' + num(adoption.stoppedProbe) + ' 条' : '') + '）'
+    : '温度记录（' + (d.records || []).length + '）';
 
   let segmentsHtml;
   if (d.segmentsUnavailable) {
@@ -449,8 +489,9 @@ function batchDetailRow(b) {
 
   return '<tr class="row-detail"><td colspan="13">' +
     '<div class="detail-grid">' +
-    '<div class="detail-block"><h4>温度记录（' + (d.records || []).length + '）</h4>' +
-    '<table class="mini-table"><thead><tr><th>时刻</th><th>探头</th><th class="num">温度(℃)</th><th>来源</th><th>是否超限</th><th>探头是否过期</th></tr></thead><tbody>' + records + '</tbody></table></div>' +
+    '<div class="detail-block"><h4>' + esc(recordTitle) + '</h4>' +
+    '<table class="mini-table"><thead><tr><th>时刻</th><th>探头</th><th class="num">温度(℃)</th><th>来源</th><th>登记人</th><th>是否超限</th><th>探头是否过期</th><th>采用情况</th></tr></thead><tbody>' + records + '</tbody></table>' +
+    '<div class="detail-note">口径：同一探头同一时刻既有自动采集又有手工更正时，以手工为准；停用探头名下记录不参与判定。超限段、累计、断链、MKT、放行判定均按最终采用的记录计算。</div></div>' +
     '<div class="detail-block"><h4>超限段（' + (d.segments || []).length + '）</h4>' + segmentsHtml +
     '<h4>断链缺口（' + (d.chainGaps || []).length + '）</h4>' +
     '<table class="mini-table"><thead><tr><th>起</th><th>止</th><th class="num">实际(分)</th><th class="num">计入(分)</th></tr></thead><tbody>' + gaps + '</tbody></table></div>' +

@@ -213,6 +213,13 @@ button { font-family: inherit; font-size: 13px; }
 .row-danger td { background: var(--accent-soft); }
 .row-danger:hover td { background: #fbdcd8; }
 
+/* 同一时刻未采用的记录：整行弱化、温度划线 */
+tr.row-adopt-off td { color: var(--ink-soft); background: #fafafa; }
+tr.row-adopt-off:hover td { background: #f3f6f7; }
+.val-off { text-decoration: line-through; text-decoration-color: var(--ink-soft); }
+.cell-adopt { white-space: normal; min-width: 200px; }
+.cell-sub { display: block; color: var(--ink-soft); font-size: 12px; margin-top: 2px; }
+
 tr.row-detail > td { background: #f7fbfc; border-bottom: 1px solid var(--line); }
 .detail-note { color: var(--ink-soft); font-size: 12px; margin: 2px 0 8px; }
 .detail-grid { display: flex; flex-wrap: wrap; gap: 14px; }

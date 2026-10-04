@@ -199,15 +199,45 @@ function listBatches(data, query) {
   return decorated.sort((a, b) => (a.loadedAt < b.loadedAt ? 1 : -1));
 }
 
+function isOutOfRange(settings, temperatureC) {
+  return Number(temperatureC) > Number(settings.upperLimitC) || Number(temperatureC) < Number(settings.lowerLimitC);
+}
+
 function batchDetail(data, id) {
   const batch = data.batches.find((b) => b.id === id);
   if (!batch) throw new AppError(404, 'BATCH_NOT_FOUND', '这个批次不存在');
-  const rows = coldlib.recordsOfBatch(data, id).map((r) => Object.assign({}, r, {
-    probeCode: probeCode(data, r.probeId),
-    probeExpired: !coldlib.probeValidOn(coldlib.probeOf(data, r.probeId), String(r.at).slice(0, 10)),
-  }));
+  // 逐条原始记录标注取数结果：是否最终采用、不采用原因、被哪条替代、按采用值判定的超限标记
+  const adoptions = coldlib.recordAdoptions(data, id);
+  const adoptionStats = {
+    total: adoptions.length,
+    adopted: adoptions.filter((a) => a.adopted).length,
+    supersededByManual: adoptions.filter((a) => !a.adopted && a.reason === 'superseded-by-manual').length,
+    duplicate: adoptions.filter((a) => !a.adopted && a.reason === 'duplicate').length,
+    stoppedProbe: adoptions.filter((a) => a.reason === 'stopped-probe').length,
+  };
+  const rows = adoptions
+    .map((a) => {
+      const r = a.record;
+      const probe = coldlib.probeOf(data, r.probeId);
+      return Object.assign({}, r, {
+        probeCode: probeCode(data, r.probeId),
+        probeExpired: !coldlib.probeValidOn(probe, String(r.at).slice(0, 10)),
+        adopted: a.adopted,
+        adoptReason: a.reason,
+        adoptNote: a.note,
+        replacedByRecordId: a.replacedBy,
+        replacedByTemperatureC: a.pickedRecord ? a.pickedRecord.temperatureC : null,
+        replacedByOperator: a.pickedRecord ? a.pickedRecord.operator : '',
+        // 记录自身是否超限（仅作原始值展示）
+        rawOutOfRange: isOutOfRange(data.settings, r.temperatureC),
+        // 该时刻最终采用值是否超限（页面「是否超限」一列以此为准；停用探头记录不参与判定，取 null）
+        effectiveOutOfRange: a.pickedRecord ? isOutOfRange(data.settings, a.pickedRecord.temperatureC) : null,
+      });
+    })
+    .sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : a.id < b.id ? -1 : 1));
   return Object.assign({}, decorateBatch(data, batch), {
     records: rows,
+    adoptionStats,
     effectiveRecords: coldlib.effectiveRecords(data, id).map((r) => Object.assign({}, r, { probeCode: probeCode(data, r.probeId) })),
     segments: coldlib.excursionStats(data, id).segments,
     chainGaps: coldlib.chainGaps(data, id).gaps,

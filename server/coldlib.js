@@ -16,22 +16,110 @@ function probeOf(data, probeId) {
   return data.probes.find((p) => p.id === probeId) || null;
 }
 
-// 同一探头同一时刻既有自动记录又有手工更正时，以手工为准
-function effectiveRecords(data, batchId) {
+// id 倒序：用于「多条同类记录」时取最新登记的一条
+function byIdDesc(a, b) {
+  return a.id < b.id ? 1 : a.id > b.id ? -1 : 0;
+}
+
+// 同一批次内同一探头同一时刻可能既有自动采集又有手工更正，取数口径：
+// 1) 分组键 = 批次 + 探头 + 时刻；
+// 2) 组内来源优先级：人工（手工更正）＞自动（自动采集），同一时刻有手工记录就用手工，自动那条不采用；
+// 3) 组内来源相同（同为自动或同为手工）属异常重复，取 id 靠后（最新登记）的一条，另一条标注重复；
+// 4) 所属探头已停用的记录不参与判定；
+// 5) 超限段、累计、断链、MKT、探头校准、放行四条与页面明细都只认这一份取数结果。
+function isActiveProbe(data, probeId) {
+  const probe = probeOf(data, probeId);
+  return !probe || probe.status !== '停用';
+}
+
+// 按「探头+时刻」分组并决定每组采用哪一条，返回 { groups, excludedStopped }
+function effectiveRecordGroups(data, batchId) {
   const rows = recordsOfBatch(data, batchId);
-  const picked = {};
+  const map = {};
   const order = [];
   for (const row of rows) {
+    if (!isActiveProbe(data, row.probeId)) continue;
     const key = row.probeId + '|' + row.at;
-    if (picked[key] === undefined) {
-      picked[key] = row;
+    if (map[key] === undefined) {
+      map[key] = [row];
       order.push(key);
       continue;
     }
-    const current = picked[key];
-    if (current.source === '人工' && row.source === '自动') picked[key] = row;
+    map[key].push(row);
   }
-  return order.map((key) => picked[key]);
+  const groups = order.map((key) => {
+    const rowsAtKey = map[key];
+    const manual = rowsAtKey.filter((r) => r.source === '人工');
+    let picked;
+    let reason;
+    if (manual.length >= 1) {
+      picked = manual.slice().sort(byIdDesc)[0];
+      reason = 'manual';
+    } else {
+      picked = rowsAtKey.slice().sort(byIdDesc)[0];
+      reason = rowsAtKey.length > 1 ? 'duplicate-auto' : 'only';
+    }
+    return {
+      probeId: picked.probeId,
+      at: picked.at,
+      picked,
+      notPicked: rowsAtKey.filter((r) => r.id !== picked.id),
+      reason,
+    };
+  });
+  return { groups, excludedStopped: rows.filter((r) => !isActiveProbe(data, r.probeId)) };
+}
+
+// 判定与统计统一使用的取数：每个「探头+时刻」只保留采用的一条
+function effectiveRecords(data, batchId) {
+  return effectiveRecordGroups(data, batchId).groups.map((g) => g.picked);
+}
+
+// 页面明细与重算用：逐条原始记录标注是否采用、同组另一条及不采用原因
+function recordAdoptions(data, batchId) {
+  const { groups, excludedStopped } = effectiveRecordGroups(data, batchId);
+  const adoptions = [];
+  for (const group of groups) {
+    // 未采用的记录：被手工更正替代（自身自动、采用的是手工），或同来源重复取最新
+    for (const row of group.notPicked) {
+      const supersededByManual = row.source === '自动' && group.picked.source === '人工';
+      adoptions.push({
+        record: row,
+        pickedRecord: group.picked,
+        adopted: false,
+        reason: supersededByManual ? 'superseded-by-manual' : 'duplicate',
+        replacedBy: group.picked.id,
+        note: supersededByManual
+          ? '同一探头同一时刻存在手工更正记录，以手工为准，本自动记录不采用'
+          : '同一探头同一时刻存在多条' + row.source + '记录，以最新登记的一条为准，本条不采用',
+      });
+    }
+    const hasRival = group.notPicked.length > 0;
+    const rivalsAuto = group.notPicked.some((r) => r.source === '自动');
+    adoptions.push({
+      record: group.picked,
+      pickedRecord: group.picked,
+      adopted: true,
+      reason: !hasRival ? 'only' : rivalsAuto && group.picked.source === '人工' ? 'manual' : 'duplicate',
+      replacedBy: '',
+      note: !hasRival
+        ? ''
+        : rivalsAuto && group.picked.source === '人工'
+          ? '同一探头同一时刻存在手工更正记录，以手工为准'
+          : '同一探头同一时刻存在多条' + group.picked.source + '记录，以最新登记的一条为准',
+    });
+  }
+  for (const row of excludedStopped) {
+    adoptions.push({
+      record: row,
+      pickedRecord: null,
+      adopted: false,
+      reason: 'stopped-probe',
+      replacedBy: '',
+      note: '所属探头已停用，名下记录不参与判定',
+    });
+  }
+  return adoptions;
 }
 
 // 超限：连续超出上下限的时段，回到范围内即断开
@@ -161,7 +249,9 @@ module.exports = {
   toDate,
   probeOf,
   recordsOfBatch,
+  effectiveRecordGroups,
   effectiveRecords,
+  recordAdoptions,
   excursionStats,
   chainGaps,
   mktCelsius,

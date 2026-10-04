@@ -1,0 +1,422 @@
+{
+  "dropped": [
+    {
+      "id": "rc-0826",
+      "batchId": "bt-0004",
+      "probeId": "pb-0004",
+      "at": "2026-09-14 12:00:00"
+    }
+  ],
+  "report": [
+    {
+      "batch": {
+        "id": "bt-0001",
+        "code": "B-2026-0001",
+        "product": "巴氏鲜牛奶",
+        "spec": "1L×12",
+        "units": 200,
+        "roomId": "rm-0001",
+        "loadedAt": "2026-08-28 08:00:00",
+        "supplier": "青岭牧场",
+        "status": "在库",
+        "remark": "跨月存放"
+      },
+      "before": {
+        "recordCount": 529,
+        "segmentCount": 5,
+        "segments": [
+          {
+            "startAt": "2026-08-29 10:00:00",
+            "endAt": "2026-08-29 10:30:00",
+            "minutes": 30,
+            "peakC": 9.4,
+            "points": 3
+          },
+          {
+            "startAt": "2026-08-30 14:00:00",
+            "endAt": "2026-08-30 14:30:00",
+            "minutes": 30,
+            "peakC": 9.4,
+            "points": 3
+          },
+          {
+            "startAt": "2026-08-31 20:00:00",
+            "endAt": "2026-08-31 20:30:00",
+            "minutes": 30,
+            "peakC": 9.4,
+            "points": 3
+          },
+          {
+            "startAt": "2026-09-01 11:00:00",
+            "endAt": "2026-09-01 11:30:00",
+            "minutes": 30,
+            "peakC": 9.4,
+            "points": 3
+          },
+          {
+            "startAt": "2026-09-02 16:00:00",
+            "endAt": "2026-09-02 16:30:00",
+            "minutes": 30,
+            "peakC": 9.4,
+            "points": 3
+          }
+        ],
+        "longestMinutes": 30,
+        "totalMinutes": 150,
+        "monthlyTotalMinutes": 90,
+        "gapCount": 0,
+        "gaps": [],
+        "mkt": 5.32,
+        "pass": true,
+        "failed": []
+      },
+      "after": {
+        "recordCount": 529,
+        "segmentCount": 5,
+        "segments": [
+          {
+            "startAt": "2026-08-29 10:00:00",
+            "endAt": "2026-08-29 10:30:00",
+            "minutes": 30,
+            "peakC": 9.4,
+            "points": 3
+          },
+          {
+            "startAt": "2026-08-30 14:00:00",
+            "endAt": "2026-08-30 14:30:00",
+            "minutes": 30,
+            "peakC": 9.4,
+            "points": 3
+          },
+          {
+            "startAt": "2026-08-31 20:00:00",
+            "endAt": "2026-08-31 20:30:00",
+            "minutes": 30,
+            "peakC": 9.4,
+            "points": 3
+          },
+          {
+            "startAt": "2026-09-01 11:00:00",
+            "endAt": "2026-09-01 11:30:00",
+            "minutes": 30,
+            "peakC": 9.4,
+            "points": 3
+          },
+          {
+            "startAt": "2026-09-02 16:00:00",
+            "endAt": "2026-09-02 16:30:00",
+            "minutes": 30,
+            "peakC": 9.4,
+            "points": 3
+          }
+        ],
+        "longestMinutes": 30,
+        "totalMinutes": 150,
+        "monthlyTotalMinutes": 90,
+        "gapCount": 0,
+        "gaps": [],
+        "mkt": 5.32,
+        "pass": true,
+        "failed": []
+      },
+      "changes": []
+    },
+    {
+      "batch": {
+        "id": "bt-0002",
+        "code": "B-2026-0002",
+        "product": "冷鲜牛肉",
+        "spec": "5kg/箱",
+        "units": 120,
+        "roomId": "rm-0001",
+        "loadedAt": "2026-09-10 07:00:00",
+        "supplier": "白河肉联",
+        "status": "待放行",
+        "remark": ""
+      },
+      "before": {
+        "recordCount": 24,
+        "segmentCount": 1,
+        "segments": [
+          {
+            "startAt": "2026-09-10 11:00:00",
+            "endAt": "2026-09-10 11:40:00",
+            "minutes": 30,
+            "peakC": 9.8,
+            "points": 3
+          }
+        ],
+        "longestMinutes": 30,
+        "totalMinutes": 30,
+        "monthlyTotalMinutes": 30,
+        "gapCount": 4,
+        "gaps": [
+          {
+            "from": "2026-09-10 08:15:00",
+            "to": "2026-09-10 08:55:00",
+            "minutes": 40,
+            "countedMinutes": 15
+          },
+          {
+            "from": "2026-09-10 09:55:00",
+            "to": "2026-09-10 10:50:00",
+            "minutes": 55,
+            "countedMinutes": 15
+          },
+          {
+            "from": "2026-09-10 11:00:00",
+            "to": "2026-09-10 11:25:00",
+            "minutes": 25,
+            "countedMinutes": 15
+          },
+          {
+            "from": "2026-09-10 11:55:00",
+            "to": "2026-09-10 12:20:00",
+            "minutes": 25,
+            "countedMinutes": 15
+          }
+        ],
+        "mkt": 5.68,
+        "pass": false,
+        "failed": [
+          "chain"
+        ]
+      },
+      "after": {
+        "recordCount": 24,
+        "segmentCount": 1,
+        "segments": [
+          {
+            "startAt": "2026-09-10 11:00:00",
+            "endAt": "2026-09-10 11:40:00",
+            "minutes": 30,
+            "peakC": 9.8,
+            "points": 3
+          }
+        ],
+        "longestMinutes": 30,
+        "totalMinutes": 30,
+        "monthlyTotalMinutes": 30,
+        "gapCount": 4,
+        "gaps": [
+          {
+            "from": "2026-09-10 08:15:00",
+            "to": "2026-09-10 08:55:00",
+            "minutes": 40,
+            "countedMinutes": 15
+          },
+          {
+            "from": "2026-09-10 09:55:00",
+            "to": "2026-09-10 10:50:00",
+            "minutes": 55,
+            "countedMinutes": 15
+          },
+          {
+            "from": "2026-09-10 11:00:00",
+            "to": "2026-09-10 11:25:00",
+            "minutes": 25,
+            "countedMinutes": 15
+          },
+          {
+            "from": "2026-09-10 11:55:00",
+            "to": "2026-09-10 12:20:00",
+            "minutes": 25,
+            "countedMinutes": 15
+          }
+        ],
+        "mkt": 5.68,
+        "pass": false,
+        "failed": [
+          "chain"
+        ]
+      },
+      "changes": []
+    },
+    {
+      "batch": {
+        "id": "bt-0003",
+        "code": "B-2026-0003",
+        "product": "低温酸奶",
+        "spec": "200g×24",
+        "units": 300,
+        "roomId": "rm-0002",
+        "loadedAt": "2026-09-12 06:30:00",
+        "supplier": "云岭乳业",
+        "status": "待放行",
+        "remark": ""
+      },
+      "before": {
+        "recordCount": 192,
+        "segmentCount": 0,
+        "segments": [],
+        "longestMinutes": 0,
+        "totalMinutes": 0,
+        "monthlyTotalMinutes": 0,
+        "gapCount": 0,
+        "gaps": [],
+        "mkt": 5.1,
+        "pass": true,
+        "failed": []
+      },
+      "after": {
+        "recordCount": 192,
+        "segmentCount": 0,
+        "segments": [],
+        "longestMinutes": 0,
+        "totalMinutes": 0,
+        "monthlyTotalMinutes": 0,
+        "gapCount": 0,
+        "gaps": [],
+        "mkt": 5.1,
+        "pass": true,
+        "failed": []
+      },
+      "changes": []
+    },
+    {
+      "batch": {
+        "id": "bt-0004",
+        "code": "B-2026-0004",
+        "product": "速冻水饺",
+        "spec": "1kg×10",
+        "units": 500,
+        "roomId": "rm-0003",
+        "loadedAt": "2026-09-14 05:00:00",
+        "supplier": "平原食品",
+        "status": "待放行",
+        "remark": "车载运输"
+      },
+      "before": {
+        "recordCount": 80,
+        "segmentCount": 1,
+        "segments": [
+          {
+            "startAt": "2026-09-14 12:00:00",
+            "endAt": "2026-09-14 12:00:00",
+            "minutes": 0,
+            "peakC": 9.5,
+            "points": 1
+          }
+        ],
+        "longestMinutes": 0,
+        "totalMinutes": 0,
+        "monthlyTotalMinutes": 0,
+        "gapCount": 0,
+        "gaps": [],
+        "mkt": 4.97,
+        "pass": true,
+        "failed": []
+      },
+      "after": {
+        "recordCount": 80,
+        "segmentCount": 0,
+        "segments": [],
+        "longestMinutes": 0,
+        "totalMinutes": 0,
+        "monthlyTotalMinutes": 0,
+        "gapCount": 0,
+        "gaps": [],
+        "mkt": 4.93,
+        "pass": true,
+        "failed": []
+      },
+      "changes": [
+        {
+          "metric": "超限段数",
+          "before": 1,
+          "after": 0
+        },
+        {
+          "metric": "MKT(℃)",
+          "before": 4.97,
+          "after": 4.93
+        }
+      ]
+    },
+    {
+      "batch": {
+        "id": "bt-0005",
+        "code": "B-2026-0005",
+        "product": "冷藏药剂",
+        "spec": "20支/盒",
+        "units": 60,
+        "roomId": "rm-0001",
+        "loadedAt": "2026-09-15 09:00:00",
+        "supplier": "远山药业",
+        "status": "待放行",
+        "remark": "探头尚未接入，暂无记录"
+      },
+      "before": {
+        "recordCount": 0,
+        "segmentCount": 0,
+        "segments": [],
+        "longestMinutes": 0,
+        "totalMinutes": 0,
+        "monthlyTotalMinutes": 0,
+        "gapCount": 0,
+        "gaps": [],
+        "mkt": 0,
+        "pass": true,
+        "failed": []
+      },
+      "after": {
+        "recordCount": 0,
+        "segmentCount": 0,
+        "segments": [],
+        "longestMinutes": 0,
+        "totalMinutes": 0,
+        "monthlyTotalMinutes": 0,
+        "gapCount": 0,
+        "gaps": [],
+        "mkt": 0,
+        "pass": true,
+        "failed": []
+      },
+      "changes": []
+    },
+    {
+      "batch": {
+        "id": "bt-0006",
+        "code": "B-2026-0006",
+        "product": "冷冻虾仁",
+        "spec": "2kg/袋",
+        "units": 400,
+        "roomId": "rm-0002",
+        "loadedAt": "2026-09-05 08:00:00",
+        "supplier": "海陵水产",
+        "status": "已放行",
+        "remark": ""
+      },
+      "before": {
+        "recordCount": 120,
+        "segmentCount": 0,
+        "segments": [],
+        "longestMinutes": 0,
+        "totalMinutes": 0,
+        "monthlyTotalMinutes": 0,
+        "gapCount": 0,
+        "gaps": [],
+        "mkt": 4.9,
+        "pass": true,
+        "failed": []
+      },
+      "after": {
+        "recordCount": 120,
+        "segmentCount": 0,
+        "segments": [],
+        "longestMinutes": 0,
+        "totalMinutes": 0,
+        "monthlyTotalMinutes": 0,
+        "gapCount": 0,
+        "gaps": [],
+        "mkt": 4.9,
+        "pass": true,
+        "failed": []
+      },
+      "changes": []
+    }
+  ],
+  "changedBatchCodes": [
+    "B-2026-0004"
+  ]
+}
